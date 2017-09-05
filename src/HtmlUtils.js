@@ -21,6 +21,7 @@ const React = require('react');
 const sanitizeHtml = require('sanitize-html');
 const highlight = require('highlight.js');
 const linkifyMatrix = require('./linkify-matrix');
+const katex = require('katex');
 import escape from 'lodash/escape';
 import emojione from 'emojione';
 import classNames from 'classnames';
@@ -429,6 +430,21 @@ export function bodyToHtml(content, highlights, opts={}) {
         'mx_EventTile_bigEmoji': emojiBody,
         'markdown-body': isHtml,
     });
+
+    // Replace $$ before $
+    // TODO : automatically escape dollar signs etc.
+    var delimiters = [ 
+        { left: "\\$\\$", right: "\\$\\$", display: true },
+        { left: "\\$", right: "\\$", display: false }
+    ];
+
+    delimiters.forEach(function(d) {
+        var reg = RegExp(d.left + "(.*?)" + d.right, "g");
+        safeBody = safeBody.replace(reg, function(match, p1) {
+            return katex.renderToString(p1, { displayMode: d.display });
+        });
+    });
+    
     return <span className={className} dangerouslySetInnerHTML={{ __html: safeBody }} dir="auto" />;
 }
 
